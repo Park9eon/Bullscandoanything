@@ -10,6 +10,12 @@ app = Flask(__name__)
 
 dm = data_manager.data_manager()
 
+@app.route('/test/<ticker>')
+def test_function(ticker):
+    dc = data_crawler.data_crawler()
+    dc.download_etf_price(ticker)
+    return 'done!'
+
 @app.route("/etf/<ticker>")
 def show_etf_info(ticker):
     return dm.get_etf_name(ticker)

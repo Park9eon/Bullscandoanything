@@ -2,6 +2,8 @@ import requests
 import csv
 import datetime
 import psycopg2
+import time
+import re
 
 import settings
 
@@ -9,6 +11,7 @@ class data_crawler:
     def __init__(self):
         now = datetime.datetime.now()
         self.today = now.strftime('%Y%m%d')
+        self.now_epoch = int(time.time())
         self.etf_file = settings.data_path + 'etf_list-' + self.today + '.csv'
 
         self.conn = psycopg2.connect(settings.conn_string)
@@ -22,6 +25,9 @@ class data_crawler:
                 data_list.append(row)
 
         return data_list
+
+    def get_price_file_name(self, ticker):
+        return settings.data_path + 'price/' + ticker + self.today + '.csv'
 
     def download_etf_list(self):
         payload = {
@@ -113,3 +119,24 @@ class data_crawler:
             )
 
         self.conn.commit()
+
+    def download_etf_price(self, ticker):
+        url = "https://finance.yahoo.com/quote/%s/?p=%s" % (ticker, ticker)
+        cookie_res = requests.get(url)
+        cookie = {'B': cookie_res.cookies['B']}
+        lines = cookie_res.content.decode('unicode-escape').strip().replace('}', '\n')
+
+        crumb_store = []
+        for l in lines.split('\n'):
+            if re.findall(r'CrumbStore', l):
+                crumb_store = l
+
+        crumb = crumb_store.split(':')[2].strip('"')
+
+        price_file_name = self.get_price_file_name(ticker)
+        file_url = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s" % (ticker, self.now_epoch, self.now_epoch, crumb)
+        file_res = requests.get(file_url, cookies=cookie)
+
+        with open(price_file_name, 'wb') as f:
+            for block in file_res.iter_content(1024):
+                f.write(block)
