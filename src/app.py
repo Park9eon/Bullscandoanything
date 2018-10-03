@@ -13,7 +13,7 @@ dm = data_manager.data_manager()
 @app.route('/test/<ticker>')
 def test_function(ticker):
     dc = data_crawler.data_crawler()
-    dc.download_etf_price(ticker)
+    dc.create_price_table(ticker)
     return 'done!'
 
 @app.route("/etf/<ticker>")

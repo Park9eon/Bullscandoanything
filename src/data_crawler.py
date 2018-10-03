@@ -140,3 +140,17 @@ class data_crawler:
         with open(price_file_name, 'wb') as f:
             for block in file_res.iter_content(1024):
                 f.write(block)
+
+    def create_price_table(self, ticker):
+        query = '''
+            CREATE TABLE price_%s (
+                trading_day  date PRIMARY KEY,
+                price        integer NOT NULL,
+                change       integer NOT NULL,
+                daily_return real NOT NULL,
+                log_return   real NOT NULL
+            );
+        ''' % ticker
+
+        self.cur.execute(query)
+        self.conn.commit()
