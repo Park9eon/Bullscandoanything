@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Main{% endblock %}
+
+{% block content %}
+    <main class='container-fluid row pt-2'>
+        <img src={{url_for('static', filename='img/main.jpg')}} class="img-fluid col-12 col-md">
+        <div class="col-12 col-md">
+            <div class="card">
+                <div class="card-header">
+                    최근 상장된 ETF
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for etf in recent %}
+                        <li class="list-group-item"><small class="text-muted">{{ etf.ticker }}</small> <a href='/etf/{{ etf.ticker }}'>{{ etf.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </main>
+{% endblock %}

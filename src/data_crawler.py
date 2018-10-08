@@ -4,6 +4,7 @@ import datetime
 import psycopg2
 import time
 import re
+import math
 
 import settings
 
@@ -12,7 +13,6 @@ class data_crawler:
         now = datetime.datetime.now()
         self.today = now.strftime('%Y%m%d')
         self.now_epoch = int(time.time())
-        self.etf_file = settings.data_path + 'etf_list-' + self.today + '.csv'
 
         self.conn = psycopg2.connect(settings.conn_string)
         self.cur = self.conn.cursor()
@@ -27,7 +27,10 @@ class data_crawler:
         return data_list
 
     def get_price_file_name(self, ticker):
-        return settings.data_path + 'price/' + ticker + self.today + '.csv'
+        return settings.data_path + 'price/' + ticker + '_price.csv'
+    
+    def get_etf_file_name(self):
+        return settings.data_path + 'etf_list-' + self.today + '.csv'
 
     def download_etf_list(self):
         payload = {
@@ -72,7 +75,7 @@ class data_crawler:
             params = {'code': market_res.text}
         )
 
-        with open(self.etf_file, 'wb') as f:
+        with open(self.get_etf_file_name(), 'wb') as f:
             f.write(file_res.content)
 
         return len(file_res.text.split('\n'))
@@ -120,7 +123,7 @@ class data_crawler:
 
         self.conn.commit()
 
-    def download_etf_price(self, ticker):
+    def download_etf_price(self, ticker, from_epoch):
         url = "https://finance.yahoo.com/quote/%s/?p=%s" % (ticker, ticker)
         cookie_res = requests.get(url)
         cookie = {'B': cookie_res.cookies['B']}
@@ -134,7 +137,7 @@ class data_crawler:
         crumb = crumb_store.split(':')[2].strip('"')
 
         price_file_name = self.get_price_file_name(ticker)
-        file_url = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s" % (ticker, self.now_epoch, self.now_epoch, crumb)
+        file_url = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s" % (ticker, from_epoch, self.now_epoch, crumb)
         file_res = requests.get(file_url, cookies=cookie)
 
         with open(price_file_name, 'wb') as f:
@@ -143,7 +146,7 @@ class data_crawler:
 
     def create_price_table(self, ticker):
         query = '''
-            CREATE TABLE price_%s (
+            CREATE TABLE IF NOT EXISTS price_%s (
                 trading_day  date PRIMARY KEY,
                 price        integer NOT NULL,
                 change       integer NOT NULL,
@@ -154,3 +157,44 @@ class data_crawler:
 
         self.cur.execute(query)
         self.conn.commit()
+
+    def insert_price(self, ticker, date, price):
+        query = '''
+            SELECT price FROM price_%s ORDER BY trading_day DESC LIMIT 1;
+        ''' % ticker
+
+        self.cur.execute(query)
+        recent_price = self.cur.fetchone()
+
+        if recent_price == None:
+            query = '''
+                INSERT INTO price_{} (
+                    trading_day, price, change, daily_return, log_return
+                ) VALUES (
+                    '{}', {}, 0, 0, 0
+                );
+            '''.format(ticker, date, price)
+        else:
+            recent_price = recent_price[0]
+            change = price - recent_price
+            daily_return = change / recent_price
+            log_return = math.log(daily_return + 1)
+            query = '''
+                INSERT INTO price_{} (
+                    trading_day, price, change, daily_return, log_return
+                ) VALUES (
+                    '{}', {}, {}, {}, {}
+                ) ON CONFLICT (trading_day) DO NOTHING;
+            '''.format(ticker, date, price, change, daily_return, log_return)
+
+        self.cur.execute(query)
+        self.conn.commit()
+
+    def update_price(self, ticker, data):
+        for price in data[1:]:
+            try:
+                float(price[1])
+            except ValueError:
+                continue
+
+            self.insert_price(ticker, price[0], int(float(price[1])))
