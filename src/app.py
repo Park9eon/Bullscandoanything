@@ -34,12 +34,27 @@ def show_etf_name():
 @app.route('/etf/<ticker>')
 def etf_info(ticker):
     name = dm.ticker_to_name(ticker)
+    info = dm.ticker_to_info(ticker)
+    current_price = dm.get_past_price(ticker, 0)
+    recent_change = dm.get_recent_change(ticker)
+
+    change_rate = lambda x : round((current_price - x) / x * 100, 2) if x != None else '-'
 
     if name != None:
         return render_template(
             'etf.html',
-            name = dm.ticker_to_name(ticker),
-            ticker = ticker
+            name = name,
+            ticker = ticker,
+            info = info,
+            price = dm.get_past_price(ticker, 0),
+            recent_date = dm.get_recent_date(ticker),
+            recent_change = recent_change,
+            return_1 = change_rate(dm.get_past_price(ticker, 1)),
+            return_3 = change_rate(dm.get_past_price(ticker, 3)),
+            return_6 = change_rate(dm.get_past_price(ticker, 6)),
+            return_12 = change_rate(dm.get_past_price(ticker, 12)),
+            return_ytd = change_rate(dm.get_past_price(ticker, -1)),
+            return_max = change_rate(dm.get_past_price(ticker, -2))
         )
     else:
         return render_template('404.html')

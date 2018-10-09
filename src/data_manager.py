@@ -76,6 +76,27 @@ class data_manager:
         else:
             return ticker[0]
     
+    def ticker_to_info(self, ticker):
+        query = '''
+            SELECT issuer, tracking_index, inception, tax_form, expenses_ratio, category FROM etf_list WHERE ticker='{}';
+        '''.format('A' + ticker)
+
+        self.cur.execute(query)
+        ret = self.cur.fetchone()
+
+        if ret == None:
+            return None
+        else:
+            info = {
+                'issuer': ret[0],
+                'tracking_index': ret[1],
+                'inception': ret[2],
+                'tax_form': ret[3],
+                'expenses_ratio': ret[4],
+                'category': ret[5]
+            }
+            return info
+    
     def ticker_to_name(self, ticker):
         query = '''
             SELECT name FROM etf_list WHERE ticker='{}';
@@ -88,3 +109,48 @@ class data_manager:
             return None
         else:
             return name[0]
+    
+    def get_past_price(self, ticker, term):
+        if term == -2:
+            query = '''
+                SELECT price FROM price_{} ORDER BY trading_day ASC LIMIT 1;
+            '''.format(ticker)
+        elif term == -1:
+            query = '''
+                SELECT price FROM price_{}
+                WHERE trading_day <= date_trunc('year', (SELECT trading_day FROM price_{} ORDER BY trading_day DESC LIMIT 1))
+                ORDER BY trading_day DESC
+                LIMIT 1;
+            '''.format(ticker, ticker)
+        elif term == 0:
+            query = '''
+                SELECT price FROM price_{} ORDER BY trading_day DESC LIMIT 1;
+            '''.format(ticker)
+        else:
+            query = '''
+                SELECT price FROM price_{}
+                WHERE trading_day <= (SELECT trading_day - interval '{}' month FROM price_{} ORDER BY trading_day DESC LIMIT 1)
+                ORDER BY trading_day DESC
+                LIMIT 1;
+            '''.format(ticker, term, ticker)
+        
+        self.cur.execute(query)
+        price = self.cur.fetchone()
+
+        if price == None:
+            return None
+        else:
+            return price[0]
+    
+    def get_recent_change(self, ticker):
+        query = '''
+            SELECT change, daily_return FROM price_{} ORDER BY trading_day DESC LIMIT 1;
+        '''.format(ticker)
+
+        self.cur.execute(query)
+        data = self.cur.fetchone()
+
+        if data == None:
+            return None
+        else:
+            return {'change': data[0], 'return': round(data[1] * 100, 2)}

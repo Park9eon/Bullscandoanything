@@ -7,8 +7,193 @@
         <div class='col-12 col-md-auto'>
             <h3 class='text-muted'><small>{{ ticker }}</small></h3>
         </div>
-        <div class='col-12 col-md-auto'>
-            <h3>{{ name }}</h3>
+        <div class='col-12 col-md-auto mr-auto'>
+            <h3>
+                {{ name }}
+                <span class="badge badge-secondary">
+                    {{ info.category }}
+                </span>
+            </h3>
         </div>
+        <div class="w-100"></div>
+        <div class="container row pb-3">
+            <small class="container row col-12">
+                <div class="col-12 col-lg-auto">
+                        <strong>
+                            상장일
+                        </strong> 
+                        {{ info.inception }}
+                    </div>
+                <div class="col-12 col-lg-auto">
+                    <strong>
+                        운용사
+                    </strong> 
+                    {{ info.issuer }}
+                </div>
+                <div class="col-12 col-lg-auto">
+                    <strong>
+                        기초 지수
+                    </strong> 
+                    {{ info.tracking_index }}
+                </div>
+                <div class="col-12 col-lg-auto">
+                    <strong>
+                        과세 방법
+                    </strong> 
+                    {{ info.tax_form }}
+                </div>
+            </small>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="card">
+                <h5 class="card-header">
+                    기간 수익률
+                </h5>
+                <div class="card-body">
+                    <div class="col-12 row">
+                        <h2 class="col-auto">
+                            {{"{:,.0f}".format(price)}} <small class="text-muted">KRW</small>   
+                        </h2>
+                        <h6 class="my-auto col-auto">
+                            {% if recent_change.change < 0 %}
+                                <span style="color: blue">
+                                    {{recent_change.change}} ({{recent_change.return}}%)
+                                </span>
+                            {% elif recent_change.change > 0 %}
+                                <span style="color: red">
+                                    +{{recent_change.change}} (+{{recent_change.return}}%)
+                                </span>
+                            {% else %}
+                                <span style="color: grey">
+                                    +0 (+0.00%)
+                                </span>
+                            {% endif %}
+                            <small class="text-muted col-auto">
+                                    {{recent_date}} 장마감 기준
+                            </small>
+                        </h6>
+                    </div>
+                </div>
+                <table class="table table-sm text-center mb-0">
+                    <thead>
+                        <tr>
+                            <td scope="col"><strong>1개월</strong></th>
+                            <td scope="col"><strong>3개월</strong></th>
+                            <td scope="col"><strong>6개월</strong></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if return_1 is string  %}
+                            <td style="color: grey">
+                                -
+                            </td>
+                        {% elif return_1 < 0 %}
+                            <td style="color: blue">
+                                {{return_1}}%
+                            </td>
+                        {% elif return_1 > 0 %}
+                            <td style="color: red">
+                                +{{return_1}}%
+                            </td>
+                        {% else %}
+                            <td style="color: grey">
+                                +0.00%
+                            </td>
+                        {% endif %}
+                        {% if return_3 is string  %}
+                            <td style="color: grey">
+                                -
+                            </td>
+                        {% elif return_3 < 0 %}
+                            <td style="color: blue">
+                                {{return_3}}%
+                            </td>
+                        {% elif return_3 > 0 %}
+                            <td style="color: red">
+                                +{{return_3}}%
+                            </td>
+                        {% else %}
+                            <td style="color: grey">
+                                +0.00%
+                            </td>
+                        {% endif %}
+                        {% if return_6 is string  %}
+                            <td style="color: grey">
+                                -
+                            </td>
+                        {% elif return_6 < 0 %}
+                            <td style="color: blue">
+                                {{return_6}}%
+                            </td>
+                        {% elif return_6 > 0 %}
+                            <td style="color: red">
+                                +{{return_6}}%
+                            </td>
+                        {% else %}
+                            <td style="color: grey">
+                                +0.00%
+                            </td>
+                        {% endif %}
+                    </tbody>
+                    <thead>
+                            <td><strong>12개월</strong></td>
+                            <td><strong>올 해</strong></td>
+                            <td><strong>최대</strong></td>
+                    </thead>
+                    <tbody>
+                        {% if return_12 is string  %}
+                            <td style="color: grey">
+                                -
+                            </td>
+                        {% elif return_12 < 0 %}
+                            <td style="color: blue">
+                                {{return_12}}%
+                            </td>
+                        {% elif return_12 > 0 %}
+                            <td style="color: red">
+                                +{{return_12}}%
+                            </td>
+                        {% else %}
+                            <td style="color: grey">
+                                +0.00%
+                            </td>
+                        {% endif %}
+                        {% if return_ytd is string  %}
+                            <td style="color: grey">
+                                -
+                            </td>
+                        {% elif return_ytd < 0 %}
+                            <td style="color: blue">
+                                {{return_ytd}}%
+                            </td>
+                        {% elif return_ytd > 0 %}
+                            <td style="color: red">
+                                +{{return_ytd}}%
+                            </td>
+                        {% else %}
+                            <td style="color: grey">
+                                +0.00%
+                            </td>
+                        {% endif %}
+                        {% if return_max < 0 %}
+                            <td style="color: blue">
+                                {{return_max}}%
+                            </td>
+                        {% elif return_max > 0 %}
+                            <td style="color: red">
+                                +{{return_max}}%
+                            </td>
+                        {% else %}
+                            <td style="color: grey">
+                                +0.00%
+                            </td>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+        
     </main>
 {% endblock %}
