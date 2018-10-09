@@ -65,18 +65,28 @@ def page_not_found(error):
 
 @app.route('/update_all')
 def update_all():
+    update_daily_data()
+    return 'done!'
+
+
+def update_daily_data():
     dc = data_crawler.data_crawler()
+    num_etf = dc.download_etf_list()
+    if num_etf > 1:
+        etf_list = dc.csv_to_dicts(dc.get_etf_file_name())
+        dc.update_etf_list(etf_list)
+    print('num_etf: {}'.format(num_etf))
+    
+
     tickers = dm.get_every_ticker()
+
     for ticker in tickers:
         ticker = ticker[0][1:]
 
         dc.create_price_table(ticker)
         recent_date = dm.get_recent_date(ticker)
 
-        if recent_date == datetime.datetime(2018, 10, 5, 0, 0).date():
-            print('skipping ' + ticker)
-            continue
-        elif recent_date == None:
+        if recent_date == None:
             recent_date = datetime.datetime(2000, 1, 1, 0, 0)
         
         print('updating ' + ticker)
@@ -84,15 +94,11 @@ def update_all():
         dc.download_etf_price(ticker + '.KS', recent_date.strftime('%s'))
         price_data = dc.csv_to_dicts(dc.get_price_file_name(ticker + '.KS'))
         dc.update_price(ticker, price_data)
-    
-
-    return 'done!'
 
 
-def update_daily_data():
+def update_scheduler():
     while True:
         now = datetime.datetime.now()
-        dc = data_crawler.data_crawler()
 
         tomorrow = now + datetime.timedelta(1)
         due_time = datetime.datetime(
@@ -104,16 +110,12 @@ def update_daily_data():
             (due_time - now).total_seconds()
         )
 
-        num_etf = dc.download_etf_list()
-        if num_etf <= 1:
-            continue
-        
-        etf_list = dc.csv_to_dicts(dc.get_etf_file_name())
-        dc.update_etf_list(etf_list)
-        
+        update_daily_data()
+
+    
 
 if __name__ == "__main__":
-    download_scheduler = threading.Thread(target=update_daily_data)
+    download_scheduler = threading.Thread(target=update_scheduler)
     download_scheduler.start()
 
-    app.run(host=settings.host_ip, port=80, debug=True)
+    app.run(host=settings.host_ip, port=3000, debug=True)

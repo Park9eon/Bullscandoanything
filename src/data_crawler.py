@@ -48,7 +48,7 @@ class data_crawler:
             'type_gubun': '00',
             'tax_tp_cd': '00',
             'isur_cd': '00000',
-            'trd_dd': self.today,
+            'trd_dd': 20181008,
             'fromdate': self.today,
             'todate': self.today,
             'gubun': '1',
