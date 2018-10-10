@@ -184,7 +184,12 @@ class data_crawler:
                     trading_day, price, change, daily_return, log_return
                 ) VALUES (
                     '{}', {}, {}, {}, {}
-                ) ON CONFLICT (trading_day) DO NOTHING;
+                ) ON CONFLICT (trading_day) DO UPDATE
+                    SET 
+                        price = EXCLUDED.price,
+                        change = EXCLUDED.change,
+                        daily_return = EXCLUDED.daily_return,
+                        log_return = EXCLUDED.log_return;
             '''.format(ticker, date, price, change, daily_return, log_return)
 
         self.cur.execute(query)
