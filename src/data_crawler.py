@@ -48,7 +48,7 @@ class data_crawler:
             'type_gubun': '00',
             'tax_tp_cd': '00',
             'isur_cd': '00000',
-            'trd_dd': 20181008,
+            'trd_dd': self.today,
             'fromdate': self.today,
             'todate': self.today,
             'gubun': '1',
@@ -193,8 +193,8 @@ class data_crawler:
     def update_price(self, ticker, data):
         for price in data[1:]:
             try:
-                float(price[1])
+                float(price[4])
             except ValueError:
                 continue
 
-            self.insert_price(ticker, price[0], int(float(price[1])))
+            self.insert_price(ticker, price[0], int(float(price[4])))

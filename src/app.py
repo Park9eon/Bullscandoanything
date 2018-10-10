@@ -103,8 +103,10 @@ def update_scheduler():
         tomorrow = now + datetime.timedelta(1)
         due_time = datetime.datetime(
             year = tomorrow.year, month = tomorrow.month, day = tomorrow.day,
-            hour = 23, minute = 0, second = 0
+            hour = 0, minute = 0, second = 0
         )
+
+        print('{} sec left...'.format((due_time - now).total_seconds()))
 
         time.sleep(
             (due_time - now).total_seconds()
