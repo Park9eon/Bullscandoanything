@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %} ETF 리스트 {% endblock %}
+
+{% block content %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>상장</th>
+                <th>분류</th>
+                <th>보수</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for etf in data %}
+            <tr>
+                <td><a href="/etf/{{etf[0][1:]}}">{{etf[1]}}</a></td>
+                <td>{{etf[2]}}</td>
+                <td>{{etf[4]}}</td>
+                <td>{{etf[3]}}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav>
+        <ul class="pagination justify-content-center">
+
+            {% if not page == 1 %}
+            <li class="page-item"><a class="page-link" href="/list/{{page-1}}">이전</a></li>
+            <li class="page-item"><a class="page-link" href="/list/{{page-1}}">{{page-1}}</a></li>
+            {% endif %}
+            <li class="page-item active"><a class="page-link" href="#">{{page}}</a></li>
+            <li class="page-item"><a class="page-link" href="/list/{{page+1}}">{{page+1}}</a></li>
+            <li class="page-item"><a class="page-link" href="/list/{{page+1}}">다음</a></li>
+        </ul>
+    </nav>
+{% endblock %}

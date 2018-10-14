@@ -59,6 +59,14 @@ def etf_info(ticker):
     else:
         return render_template('404.html')
 
+@app.route('/list/<int:page>')
+def show_etf_list(page):
+    return render_template(
+        'list.html',
+        data = dm.get_etf_list(page, 50),
+        page = page
+    )
+
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('404.html')

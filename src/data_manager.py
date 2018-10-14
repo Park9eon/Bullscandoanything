@@ -154,3 +154,18 @@ class data_manager:
             return None
         else:
             return {'change': data[0], 'return': round(data[1] * 100, 2)}
+
+    def get_etf_list(self, page, amount):
+        query = '''
+            SELECT
+                ticker, name, inception, expenses_ratio, category
+            FROM etf_list ORDER BY inception DESC LIMIT {} OFFSET {};
+        '''.format(amount, (page - 1) * amount)
+
+        self.cur.execute(query)
+        data = self.cur.fetchall()
+
+        if data == None:
+            return None
+        else:
+            return data

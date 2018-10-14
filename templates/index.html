@@ -8,7 +8,12 @@
         <div class="col-12 col-md">
             <div class="card">
                 <div class="card-header">
-                    최근 상장된 ETF
+                    <div class="row">
+                        <div class="col-auto">최근 상장된 ETF</div>
+                        <div class="col">
+                            <a href="list/1" class="float-right">more</a>
+                        </div>
+                    </div>
                 </div>
                 <ul class="list-group list-group-flush">
                     {% for etf in recent %}
