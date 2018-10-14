@@ -124,21 +124,28 @@ class data_crawler:
         self.conn.commit()
 
     def download_etf_price(self, ticker, from_epoch):
-        url = "https://finance.yahoo.com/quote/%s/?p=%s" % (ticker, ticker)
-        cookie_res = requests.get(url)
-        cookie = {'B': cookie_res.cookies['B']}
-        lines = cookie_res.content.decode('unicode-escape').strip().replace('}', '\n')
+        price_file_name = None
+        file_res = None
 
-        crumb_store = []
-        for l in lines.split('\n'):
-            if re.findall(r'CrumbStore', l):
-                crumb_store = l
+        while file_res is None:
+            try:
+                url = "https://finance.yahoo.com/quote/%s/?p=%s" % (ticker, ticker)
+                cookie_res = requests.get(url)
+                cookie = {'B': cookie_res.cookies['B']}
+                lines = cookie_res.content.decode('unicode-escape').strip().replace('}', '\n')
 
-        crumb = crumb_store.split(':')[2].strip('"')
+                crumb_store = []
+                for l in lines.split('\n'):
+                    if re.findall(r'CrumbStore', l):
+                        crumb_store = l
 
-        price_file_name = self.get_price_file_name(ticker)
-        file_url = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s" % (ticker, from_epoch, self.now_epoch, crumb)
-        file_res = requests.get(file_url, cookies=cookie)
+                crumb = crumb_store.split(':')[2].strip('"')
+
+                price_file_name = self.get_price_file_name(ticker)
+                file_url = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s" % (ticker, from_epoch, self.now_epoch, crumb)
+                file_res = requests.get(file_url, cookies=cookie)
+            except TypeError:
+                pass
 
         with open(price_file_name, 'wb') as f:
             for block in file_res.iter_content(1024):

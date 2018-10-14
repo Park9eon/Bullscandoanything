@@ -120,4 +120,4 @@ if __name__ == "__main__":
     download_scheduler = threading.Thread(target=update_scheduler)
     download_scheduler.start()
 
-    app.run(host=settings.host_ip, port=3000, debug=True)
+    app.run(**settings.app_conn)
