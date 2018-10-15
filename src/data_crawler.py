@@ -144,7 +144,7 @@ class data_crawler:
                 price_file_name = self.get_price_file_name(ticker)
                 file_url = "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%s&period2=%s&interval=1d&events=history&crumb=%s" % (ticker, from_epoch, self.now_epoch, crumb)
                 file_res = requests.get(file_url, cookies=cookie)
-            except TypeError:
+            except KeyError:
                 pass
 
         with open(price_file_name, 'wb') as f:
