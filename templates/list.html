@@ -15,24 +15,29 @@
         <tbody>
             {% for etf in data %}
             <tr>
-                <td><a href="/etf/{{etf[0][1:]}}">{{etf[1]}}</a></td>
-                <td>{{etf[2]}}</td>
-                <td>{{etf[4]}}</td>
-                <td>{{etf[3]}}%</td>
+                <td><a href="/etf/{{etf.ticker[1:]}}">{{etf.name}}</a></td>
+                <td>{{etf.inception}}</td>
+                <td>{{etf.category}}</td>
+                <td>{{etf.expenses_ratio}}%</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     <nav>
-        <ul class="pagination justify-content-center">
+        {% if not request.args.get('category') == None %}
+        {% set category = 'category=' + request.args.get('category') %}
+        {% endif %}
 
+        <ul class="pagination justify-content-center">
+            <li class="page-item"><a class="page-link" href="/list/1?{{category}}">처음</a></li>
             {% if not page == 1 %}
-            <li class="page-item"><a class="page-link" href="/list/{{page-1}}">이전</a></li>
-            <li class="page-item"><a class="page-link" href="/list/{{page-1}}">{{page-1}}</a></li>
+            <li class="page-item"><a class="page-link" href="/list/{{page-1}}?{{category}}">{{page-1}}</a></li>
             {% endif %}
             <li class="page-item active"><a class="page-link" href="#">{{page}}</a></li>
-            <li class="page-item"><a class="page-link" href="/list/{{page+1}}">{{page+1}}</a></li>
-            <li class="page-item"><a class="page-link" href="/list/{{page+1}}">다음</a></li>
+            {% if not page == total %}
+            <li class="page-item"><a class="page-link" href="/list/{{page+1}}?{{category}}">{{page+1}}</a></li>
+            {% endif %}
+            <li class="page-item"><a class="page-link" href="/list/{{total}}?{{category}}">끝</a></li>
         </ul>
     </nav>
 {% endblock %}

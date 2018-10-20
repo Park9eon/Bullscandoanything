@@ -6,6 +6,27 @@ class data_manager:
     def __init__(self):
         self.conn = psycopg2.connect(settings.conn_string)
         self.cur = self.conn.cursor()
+
+    def fetch_data(self, query, names):
+        self.cur.execute(query)
+        data = self.cur.fetchone()
+
+        if data == None:
+            return None
+        else:
+            return dict(zip(names, data))
+
+    def fetch_many_data(self, query, names):
+        self.cur.execute(query)
+        data = self.cur.fetchall()
+
+        if data == None:
+            return None
+        else:
+            return {
+                'length': len(data),
+                'data': [dict(zip(names, datum)) for datum in data]
+            }
     
     def get_etf_name(self, ticker):
         query = '''
@@ -81,34 +102,18 @@ class data_manager:
             SELECT issuer, tracking_index, inception, tax_form, expenses_ratio, category FROM etf_list WHERE ticker='{}';
         '''.format('A' + ticker)
 
-        self.cur.execute(query)
-        ret = self.cur.fetchone()
+        return self.fetch_data(query, [
+            'issuer', 'tracking_index', 'inception', 'tax_form', 'expenses_ratio', 'category'
+        ])
 
-        if ret == None:
-            return None
-        else:
-            info = {
-                'issuer': ret[0],
-                'tracking_index': ret[1],
-                'inception': ret[2],
-                'tax_form': ret[3],
-                'expenses_ratio': ret[4],
-                'category': ret[5]
-            }
-            return info
-    
     def ticker_to_name(self, ticker):
         query = '''
             SELECT name FROM etf_list WHERE ticker='{}';
         '''.format('A' + ticker)
-        
-        self.cur.execute(query)
-        name = self.cur.fetchone()
-    
-        if name == None:
-            return None
-        else:
-            return name[0]
+
+        return self.fetch_data(query, [
+            'name'
+        ])
     
     def get_past_price(self, ticker, term):
         if term == -2:
@@ -144,28 +149,66 @@ class data_manager:
     
     def get_recent_change(self, ticker):
         query = '''
-            SELECT change, daily_return FROM price_{} ORDER BY trading_day DESC LIMIT 1;
+            WITH price_table AS (
+                SELECT
+                    trading_day,
+                    price,
+                    lag(price, 1) 
+                        OVER (ORDER BY trading_day)
+                        AS price_yesterday
+                FROM
+                    price_{}
+                GROUP BY
+                    trading_day
+                ORDER BY
+                    trading_day DESC
+            )
+            SELECT 
+                trading_day,
+                price,
+                price - price_yesterday AS change,
+                (price - price_yesterday) / price_yesterday::real AS change_rate,
+                ln((price - price_yesterday) / price_yesterday::real + 1) AS log_rate
+            FROM price_table LIMIT 1;
         '''.format(ticker)
 
-        self.cur.execute(query)
-        data = self.cur.fetchone()
+        return self.fetch_data(query, [
+            'trading_day',
+            'price',
+            'change',
+            'return',
+            'log_return'
+        ])
 
-        if data == None:
-            return None
-        else:
-            return {'change': data[0], 'return': round(data[1] * 100, 2)}
-
-    def get_etf_list(self, page, amount):
+    def get_etf_list(self):
         query = '''
-            SELECT
-                ticker, name, inception, expenses_ratio, category
-            FROM etf_list ORDER BY inception DESC LIMIT {} OFFSET {};
-        '''.format(amount, (page - 1) * amount)
+            SELECT ticker, name, inception, expenses_ratio, category
+            FROM etf_list ORDER BY inception DESC;
+        '''
 
-        self.cur.execute(query)
-        data = self.cur.fetchall()
+        return self.fetch_many_data(query, [
+            'ticker',
+            'name',
+            'inception',
+            'expenses_ratio',
+            'category'
+        ])
 
-        if data == None:
-            return None
-        else:
-            return data
+    def get_etf_list_by_category(self,  category):
+        query = '''
+            SELECT ticker, name, inception, expenses_ratio, category
+            FROM etf_list WHERE (
+                category LIKE '{}-%' OR
+                category LIKE '%-{}-%' OR
+                category LIKE '%-{}'
+            )
+            ORDER BY inception DESC;
+        '''.format(category, category, category)
+
+        return self.fetch_many_data(query, [
+            'ticker',
+            'name',
+            'inception',
+            'expenses_ratio',
+            'category'
+        ])

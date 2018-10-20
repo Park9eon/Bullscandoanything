@@ -33,7 +33,7 @@ def show_etf_name():
 
 @app.route('/etf/<ticker>')
 def etf_info(ticker):
-    name = dm.ticker_to_name(ticker)
+    name = dm.ticker_to_name(ticker)['name']
     info = dm.ticker_to_info(ticker)
     current_price = dm.get_past_price(ticker, 0)
     recent_change = dm.get_recent_change(ticker)
@@ -59,13 +59,26 @@ def etf_info(ticker):
     else:
         return render_template('404.html')
 
-@app.route('/list/<int:page>')
-def show_etf_list(page):
-    return render_template(
-        'list.html',
-        data = dm.get_etf_list(page, 50),
-        page = page
-    )
+@app.route('/list/<int:page>', methods=['GET'])
+def show_etf_list_get(page):
+    category = request.args.get('category')
+    
+    if category == None:
+        data = dm.get_etf_list()
+        return render_template(
+            'list.html',
+            data = data['data'][20 * (page - 1) : 20 * page],
+            page = page,
+            total = (data['length'] - 1) // 20 + 1
+        )
+    else:
+        data = dm.get_etf_list_by_category(category)
+        return render_template(
+            'list.html',
+            data = data['data'][20 * (page - 1) : 20 * page],
+            page = page,
+            total = (data['length'] - 1) // 20 + 1
+        )
 
 @app.errorhandler(404)
 def page_not_found(error):
