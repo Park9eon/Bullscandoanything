@@ -5,6 +5,7 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 import data_crawler
 import data_manager
 import settings
+import math
 
 app = Flask(
         __name__,
@@ -37,6 +38,7 @@ def etf_info(ticker):
     info = dm.ticker_to_info(ticker)
     current_price = dm.get_past_price(ticker, 0)
     recent_change = dm.get_recent_change(ticker)
+    realized_vol = dm.get_realized_vol(ticker)
 
     change_rate = lambda x : round((current_price - x) / x * 100, 2) if x != None else '-'
 
@@ -54,7 +56,10 @@ def etf_info(ticker):
             return_6 = change_rate(dm.get_past_price(ticker, 6)),
             return_12 = change_rate(dm.get_past_price(ticker, 12)),
             return_ytd = change_rate(dm.get_past_price(ticker, -1)),
-            return_max = change_rate(dm.get_past_price(ticker, -2))
+            return_max = change_rate(dm.get_past_price(ticker, -2)),
+            realized_vol = realized_vol,
+            var_90_95 = dm.get_value_at_risk(ticker, 90, 0.95),
+            var_90_99 = dm.get_value_at_risk(ticker, 90, 0.99)
         )
     else:
         return render_template('404.html')

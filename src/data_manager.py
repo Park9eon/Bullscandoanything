@@ -1,4 +1,5 @@
 import psycopg2
+import math
 
 import settings
 
@@ -212,3 +213,57 @@ class data_manager:
             'expenses_ratio',
             'category'
         ])
+
+    def get_realized_vol(self, ticker):
+        query = '''
+            WITH price_table AS (
+                SELECT
+                    trading_day,
+                    price,
+                    lag(price, 1) 
+                        OVER (ORDER BY trading_day)
+                        AS price_yesterday
+                FROM
+                    price_{}
+                GROUP BY
+                    trading_day
+                ORDER BY
+                    trading_day DESC
+                LIMIT 90
+            )
+            SELECT 
+                100 * sqrt(252 / least(count(trading_day), 90) * sum(power(ln((price - price_yesterday) / price_yesterday::real + 1),2))) AS log_rate
+            FROM price_table;
+        '''.format(ticker)
+
+        return self.fetch_data(query, [
+            'vol'
+        ])
+    
+    def get_value_at_risk(self, ticker, days, z_score):
+        query = '''
+        WITH price_table AS (
+            SELECT
+                trading_day,
+                price,
+                lag(price, {}) 
+                    OVER (ORDER BY trading_day)
+                    AS price_past
+            FROM
+                price_{}
+            GROUP BY
+                trading_day
+            ORDER BY
+                trading_day DESC
+        )
+        SELECT 
+            avg(ln((price - price_past) / price_past::real + 1)) AS log_rate_mean,
+            stddev(ln((price - price_past) / price_past::real + 1)) AS log_rate_st
+        FROM price_table;
+        '''.format(days, ticker)
+
+        try:
+            stats = self.fetch_data(query, ['mean', 'std'])
+            return (1 - math.exp(stats['mean'] - z_score * stats['std']))
+        except TypeError:
+            return '-'

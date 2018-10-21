@@ -196,7 +196,65 @@
             </div>
         </div>
 
-        
-        
+        <div class="col-12 col-md-6">
+                <div class="card">
+                    <h5 class="card-header">
+                        위험 지표
+                    </h5>
+                    <div class="card-body">
+                        <div class="col-12 row">
+                            <h2 class="col-12">
+                                {{"{:,.3f}".format(realized_vol.vol)}}
+                                <small class="text-muted">%</small>   
+                            </h2>
+                            <h6 class="my-auto col-12">
+                                <small class="text-muted">
+                                        90일간 변동성
+                                </small>
+                            </h6>
+                        </div>
+                    </div>
+                    <table class="table table-sm text-center mb-0">
+                        <thead>
+                            <tr>
+                                <td scope="col">
+                                    90일 VaR (95%)
+                                </td>
+                                <td scope="col">
+                                    90일 VaR (99%)
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if var_90_95 is string  %}
+                                <td >
+                                    {{var_90_95}}
+                                </td>
+                            {% elif var_90_95 > 0 %}
+                                <td style="color: blue">
+                                    -{{"{:,.2f}".format(var_90_95 * 100)}}%
+                                </td>
+                            {% else %}
+                                <td style="color: red">
+                                    +{{"{:,.2f}".format(-var_90_95 * 100)}}%
+                                </td>
+                            {% endif %}
+                            {% if var_90_99 is string  %}
+                                <td >
+                                    {{var_90_99}}
+                                </td>
+                            {% elif var_90_99 > 0 %}
+                                <td style="color: blue">
+                                    -{{"{:,.2f}".format(var_90_99 * 100)}}%
+                                </td>
+                            {% else %}
+                                <td style="color: red">
+                                    +{{"{:,.2f}".format(-var_90_99 * 100)}}%
+                                </td>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>    
     </main>
 {% endblock %}
