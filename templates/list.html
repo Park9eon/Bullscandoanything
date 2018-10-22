@@ -31,12 +31,18 @@
     <nav>
         <ul class="pagination justify-content-center">
             <li class="page-item"><a class="page-link" href="/list/1?{{category}}">처음</a></li>
-            {% if not page == 1 %}
+            {% if not page <= 2 %}
+            <li class="page-item"><a class="page-link" href="/list/{{page-2}}?{{category}}">{{page-2}}</a></li>
+            {% endif %}
+            {% if not page <= 1 %}
             <li class="page-item"><a class="page-link" href="/list/{{page-1}}?{{category}}">{{page-1}}</a></li>
             {% endif %}
             <li class="page-item active"><a class="page-link" href="#">{{page}}</a></li>
-            {% if not page == total %}
+            {% if not page >= total-1 %}
             <li class="page-item"><a class="page-link" href="/list/{{page+1}}?{{category}}">{{page+1}}</a></li>
+            {% endif %}
+            {% if not page >= total %}
+            <li class="page-item"><a class="page-link" href="/list/{{page+2}}?{{category}}">{{page+2}}</a></li>
             {% endif %}
             <li class="page-item"><a class="page-link" href="/list/{{total}}?{{category}}">끝</a></li>
         </ul>
